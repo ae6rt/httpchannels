@@ -12,8 +12,8 @@ type thing string
 var setThing = make(chan thing)
 var getThing = make(chan thing)
 
-func thingUpdater() {
-	var t thing
+func thingUpdater(initialValue thing) {
+	t := initialValue
 	log.Print("thingUpdater: running")
 	for {
 		select {
@@ -33,8 +33,7 @@ func readThing(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	go thingUpdater()
-	setThing <- thing(fmt.Sprintf("%v", time.Now()))
+	go thingUpdater(thing(fmt.Sprintf("%v", time.Now())))
 
 	http.HandleFunc("/read", readThing)
 	http.HandleFunc("/update", updateThing)
