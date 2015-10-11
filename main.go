@@ -18,7 +18,9 @@ func thingUpdater(initialValue thing) {
 	for {
 		select {
 		case t = <-setThing:
+			fmt.Printf("Set %s\n", t)
 		case getThing <- t:
+			fmt.Printf("Get t: %s\n", t)
 		}
 	}
 }
