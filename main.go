@@ -2,34 +2,39 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
-var thing string
-var mutex = &sync.Mutex{}
+type thing string
+
+var setThing = make(chan thing)
+var getThing = make(chan thing)
+
+func thingUpdater() {
+	var t thing
+	log.Print("thingUpdater: running")
+	for {
+		select {
+		case t = <-setThing:
+		case getThing <- t:
+		}
+	}
+}
 
 func updateThing(w http.ResponseWriter, r *http.Request) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	thing = fmt.Sprintf("%v\n", time.Now())
+	setThing <- thing(fmt.Sprintf("%v", time.Now()))
 }
 
 func readThing(w http.ResponseWriter, r *http.Request) {
-	v := thingProvider()
-	fmt.Fprintf(w, v)
-}
-
-func thingProvider() string {
-	mutex.Lock()
-	defer mutex.Unlock()
-	c := thing
-	return c
+	v := <-getThing
+	fmt.Fprint(w, v)
 }
 
 func main() {
-	thing = fmt.Sprintf("%v\n", time.Now())
+	go thingUpdater()
+	setThing <- thing(fmt.Sprintf("%v", time.Now()))
 
 	http.HandleFunc("/read", readThing)
 	http.HandleFunc("/update", updateThing)
