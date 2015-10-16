@@ -1,3 +1,10 @@
+### Build and run
+
+```
+$ go build
+$ ./httpchannels
+```
+
 ### Do some reads
 
 ```
